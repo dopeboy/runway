@@ -15,9 +15,6 @@ import dj_database_url
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 
-# BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
@@ -26,9 +23,6 @@ SECRET_KEY = '-8shqbz)ij#7b(2p6u0ip-ogio@vijcxh8%@=22wp!4d=67$db'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
-# ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -89,11 +83,6 @@ USE_L10N = True
 
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/1.8/howto/static-files/
-
-# STATIC_URL = '/static/'
 
 # !!!!!!!!! - HEROKU SPECIFIC STUFF
 
