@@ -20,7 +20,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'i6wyazqspfx$3xzvh&8n+6(sh9--bld2o^_p2+(_)+7@k3b^cy'
+SECRET_KEY = '+duu2_r7h^=i3a0y&&6%r)b!$%41yd%)vxw73#dy&d!cr^8ny_'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -38,8 +38,20 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'apiapp'
+    'apiapp',
+    'django_extensions',
+    'rest_framework.authtoken'
 )
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'apiapp.authentication.ExpiringTokenAuthentication'
+    )
+}
+
+REST_FRAMEWORK_TOKEN_EXPIRE_HOURS = 1
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -72,7 +84,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'runway.wsgi.application'
 
-AUTH_USER_MODEL = 'apiapp.MyUser'
 
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
@@ -98,6 +109,7 @@ USE_L10N = True
 
 USE_TZ = True
 
+AUTH_USER_MODEL = 'apiapp.MyUser'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
