@@ -46,6 +46,9 @@ class MyUserManager(BaseUserManager):
 
 
 class MyUser(AbstractBaseUser):
+    first_name = models.CharField(max_length=32)
+    last_name = models.CharField(max_length=32)
+
     email = models.EmailField(
         verbose_name='email address',
         max_length=255,
@@ -69,25 +72,30 @@ class MyUser(AbstractBaseUser):
 
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4,
                             editable=False)
+
     # One user can have multiple favorite photos; one photo can be favorited
     # by multiple users
     favorite_photos = models.ManyToManyField(Photo)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
+
     # This store the user ID from the service they used to log in.
     social_userid = models.CharField(max_length=64)
+
     # The service they used to log in
-    social_source = models.CharField(max_length=1, choices=SOCIAL_CHOICES)
+    social_source = models.CharField(max_length=4, choices=SOCIAL_CHOICES)
+
+    karma = models.IntegerField(default=0)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['gender']
 
     def get_full_name(self):
         # The user is identified by their email address
-        return self.email
+        return self.first_name + " " + self.last_name
 
     def get_short_name(self):
         # The user is identified by their email address
-        return self.email
+        return self.first_name
 
     def __str__(self):              # __unicode__ on Python 2
         return self.email
