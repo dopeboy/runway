@@ -1,0 +1,50 @@
+[
+  {
+    "model": "apiapp.clothingtype",
+    "uuid": "9a79f91a-ed4a-4f66-b6de-29d1b285819c",
+    "fields": {
+      "label": "Shirt",
+      "created" : "2015-06-18"
+    }
+  }, 
+  {
+    "model": "apiapp.clothingtype",
+    "uuid": "835b9365-1ade-45b7-a3f5-b0297a6b90ac",
+    "fields": {
+      "label": "Shoe",
+      "created" : "2015-06-18"
+    }
+  },
+  {
+    "model": "apiapp.clothingtype",
+    "uuid": "f0558be0-6718-4df3-8f90-237e41fbb1b9",
+    "fields": {
+      "label": "Dress",
+      "created" : "2015-06-18"
+    }
+  },
+  {
+    "model": "apiapp.brand",
+    "uuid": "884f4ac4-40e7-4c54-b8b6-427139029bd4",
+    "fields": {
+      "label": "Calvin Klein",
+      "created" : "2015-06-18"
+    }
+  },
+  {
+    "model": "apiapp.brand",
+    "uuid": "7844bdde-09ec-43a5-92bf-88491db25efe",
+    "fields": {
+      "label": "H&M",
+      "created" : "2015-06-18"
+    }
+  },
+  {
+    "model": "apiapp.brand",
+    "uuid": "4d9f4388-fc03-421a-ac75-1d335d6f987f",
+    "fields": {
+      "label": "Forever 21",
+      "created" : "2015-06-18"
+    }
+  }
+]
