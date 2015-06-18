@@ -71,18 +71,18 @@ class AuthTokenFacebookSerializer(serializers.Serializer):
 
 
 class ClothingTypeSerializer(serializers.ModelSerializer):
-    clothing_type_id = serializers.UUIDField(source='uuid')
+    clothing_type_guid = serializers.UUIDField(source='uuid')
     clothing_type_label = serializers.CharField(source='label')
 
     class Meta:
         model = ClothingType
-        fields = ('clothing_type_id', 'clothing_type_label')
+        fields = ('clothing_type_guid', 'clothing_type_label')
 
 
 class BrandTypeSerializer(serializers.ModelSerializer):
-    brand_id = serializers.UUIDField(source='uuid')
+    brand_guid = serializers.UUIDField(source='uuid')
     brand_nm = serializers.CharField(source='label')
 
     class Meta:
         model = Brand
-        fields = ('brand_id', 'brand_nm')
+        fields = ('brand_guid', 'brand_nm')
