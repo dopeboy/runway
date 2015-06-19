@@ -1,16 +1,10 @@
 from rest_framework import serializers
-from apiapp.models import Photo, MyUser, ClothingType, Brand
+from apiapp.models import Photo, MyUser, ClothingType, Brand, \
+        Tag
 from django.contrib.auth import authenticate
 import requests
 import json
 from datetime import datetime
-
-
-class PhotoSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Photo
-        fields = ('uuid', 'url', 'created')
-        owner = serializers.ReadOnlyField(source='owner.username')
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -71,18 +65,45 @@ class AuthTokenFacebookSerializer(serializers.Serializer):
 
 
 class ClothingTypeSerializer(serializers.ModelSerializer):
-    clothing_type_guid = serializers.UUIDField(source='uuid')
+    clothing_type_uuid = serializers.UUIDField(source='uuid')
     clothing_type_label = serializers.CharField(source='label')
 
     class Meta:
         model = ClothingType
-        fields = ('clothing_type_guid', 'clothing_type_label')
+        fields = ('clothing_type_uuid', 'clothing_type_label')
 
 
 class BrandTypeSerializer(serializers.ModelSerializer):
-    brand_guid = serializers.UUIDField(source='uuid')
+    brand_uuid = serializers.UUIDField(source='uuid')
     brand_nm = serializers.CharField(source='label')
 
     class Meta:
         model = Brand
-        fields = ('brand_guid', 'brand_nm')
+        fields = ('brand_uuid', 'brand_nm')
+
+
+class TagSerializer(serializers.ModelSerializer):
+    # This is false because upon serializtion, we don't
+    # always know the photo UUID yet.
+
+    class Meta:
+        model = Tag
+        fields = ('uuid', 'point_x', 'point_y', 'clothing_type_uuid', 'brand_uuid')
+
+
+class PhotoSerializer(serializers.ModelSerializer):
+    tags = TagSerializer(many=True)
+    img_url = serializers.CharField(max_length=256, source='url')
+    thumb_img_url = serializers.CharField(max_length=256, source='thumb_url')
+    img_uuid = serializers.UUIDField(required=False, source='uuid')
+
+    class Meta:
+        model = Photo
+        fields = ('img_uuid', 'tags', 'img_url', 'thumb_img_url')
+
+    def create(self, validated_data):
+        tags = validated_data.pop('tags')
+        photo = Photo.objects.create(**validated_data)
+        for tag in tags:
+            Tag.objects.create(photo_uuid=photo, owner=validated_data['owner'], **tag)
+        return photo

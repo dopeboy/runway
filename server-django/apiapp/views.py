@@ -2,7 +2,7 @@ from apiapp.models import Photo, MyUser,\
         ClothingType, Brand
 from apiapp.serializers import PhotoSerializer, UserSerializer, \
         AuthTokenFacebookSerializer, ClothingTypeSerializer, \
-        BrandTypeSerializer
+        BrandTypeSerializer, TagSerializer
 from rest_framework import permissions
 from apiapp.permissions import IsOwnerOrReadOnly
 from rest_framework.decorators import api_view
@@ -23,8 +23,10 @@ from apiapp.authentication import ExpiringTokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators \
         import permission_classes, authentication_classes
+import logging
 
 EXPIRE_HOURS = getattr(settings, 'REST_FRAMEWORK_TOKEN_EXPIRE_HOURS')
+logger = logging.getLogger(__name__)
 
 
 @api_view(('GET',))
@@ -51,6 +53,13 @@ class PhotoViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+    # def create(self, request):
+    #     logger.error(request.DATA["tags"])
+    #     tags = request.DATA["tags"]
+    #     for tag in tags:
+    #         serializer = TagSerializer(tag)
+    #         logger.error(serializer.is_valid())
+    #     pass
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
@@ -86,7 +95,7 @@ class ObtainExpiringAuthToken(ObtainAuthToken):
                 token.created = datetime.datetime.utcnow()
                 token.save()
 
-            response_data = {'token': token.key,
+            response_data = {'access_token': token.key,
                              'karma': user.karma}
             return HttpResponse(json.dumps(response_data),
                                 content_type="application/json")

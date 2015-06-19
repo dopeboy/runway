@@ -8,6 +8,7 @@ class Photo(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4,
                             editable=False)
     url = models.CharField(max_length=256)
+    thumb_url = models.CharField(max_length=256)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='photos')
     created = models.DateTimeField(auto_now_add=True)
 
@@ -134,7 +135,7 @@ class Brand(models.Model):
 class Tag(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4,
                             editable=False)
-    photo_uuid = models.ForeignKey(Photo)
+    photo_uuid = models.ForeignKey(Photo, related_name='tags')
     point_x = models.DecimalField(max_digits=10, decimal_places=3)
     point_y = models.DecimalField(max_digits=10, decimal_places=3)
     clothing_type_uuid = models.ForeignKey(ClothingType)
@@ -153,7 +154,7 @@ class DownvoteReason(models.Model):
 class Vote(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4,
                             editable=False)
-    tag_uuid = models.ForeignKey(Tag)
+    tag_uuid = models.ForeignKey(Tag, related_name='tags')
     downvote_reason_uuid = models.ForeignKey(DownvoteReason)
     direction = models.IntegerField()  # 1 or -1
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='votes')
