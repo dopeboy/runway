@@ -223,7 +223,7 @@ class BrandViewSet(viewsets.ReadOnlyModelViewSet):
                               BasicAuthentication,
                               ExpiringTokenAuthentication)
     permission_classes = (IsAuthenticated,)
-    queryset = Brand.objects.all().order_by('label')
+    queryset = Brand.objects.all().order_by('name')
     serializer_class = BrandTypeSerializer
 
 
