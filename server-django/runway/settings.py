@@ -52,7 +52,7 @@ REST_FRAMEWORK = {
     )
 }
 
-REST_FRAMEWORK_TOKEN_EXPIRE_HOURS = 1
+REST_FRAMEWORK_TOKEN_EXPIRE_HOURS = 10000
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -87,6 +87,7 @@ WSGI_APPLICATION = 'runway.wsgi.application'
 
 SHELL_PLUS_PRE_IMPORTS = (
     ('apiapp.serializers', '*'),
+    ('pprint', '*'),
 
 )
 # Database

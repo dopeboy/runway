@@ -10,7 +10,20 @@ class Photo(models.Model):
     url = models.CharField(max_length=256)
     thumb_url = models.CharField(max_length=256)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='photos')
+
+    # viewers are users who have seen the photo
+    viewers = models.ManyToManyField(settings.AUTH_USER_MODEL,
+                                     through='PhotoViewership')
+
     created = models.DateTimeField(auto_now_add=True)
+
+
+class PhotoViewership(models.Model):
+    uuid = models.UUIDField(primary_key=True, default=uuid.uuid4,
+                            editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    photo = models.ForeignKey(Photo)
+    date_viewed = models.DateField(auto_now_add=True)
 
 
 class MyUserManager(BaseUserManager):
@@ -74,9 +87,6 @@ class MyUser(AbstractBaseUser):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4,
                             editable=False)
 
-    # One user can have multiple favorite photos; one photo can be favorited
-    # by multiple users
-    favorite_photos = models.ManyToManyField(Photo)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
 
     # This store the user ID from the service they used to log in.
@@ -85,7 +95,8 @@ class MyUser(AbstractBaseUser):
     # The service they used to log in
     social_source = models.CharField(max_length=4, choices=SOCIAL_CHOICES)
 
-    karma = models.IntegerField(default=0)
+    # The profile picture on the service they used to login on
+    social_profile_picture = models.CharField(max_length=320)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['gender']
@@ -124,22 +135,28 @@ class ClothingType(models.Model):
     label = models.CharField(max_length=256)
     created = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return str(self.uuid)
+
 
 class Brand(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4,
                             editable=False)
-    label = models.CharField(max_length=256)
+    name = models.CharField(max_length=256)
     created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return str(self.uuid)
 
 
 class Tag(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4,
                             editable=False)
-    photo_uuid = models.ForeignKey(Photo, related_name='tags')
+    photo = models.ForeignKey(Photo, related_name='tags')
     point_x = models.DecimalField(max_digits=10, decimal_places=3)
     point_y = models.DecimalField(max_digits=10, decimal_places=3)
-    clothing_type_uuid = models.ForeignKey(ClothingType)
-    brand_uuid = models.ForeignKey(Brand)
+    clothing_type = models.ForeignKey(ClothingType)
+    brand = models.ForeignKey(Brand)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='tags')
     created = models.DateTimeField(auto_now_add=True)
 
@@ -154,8 +171,8 @@ class DownvoteReason(models.Model):
 class Vote(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4,
                             editable=False)
-    tag_uuid = models.ForeignKey(Tag, related_name='tags')
-    downvote_reason_uuid = models.ForeignKey(DownvoteReason)
-    direction = models.IntegerField()  # 1 or -1
+    tag = models.ForeignKey(Tag, related_name='votes')
+    downvote_reason = models.ForeignKey(DownvoteReason)
+    value = models.IntegerField()  # 1 or -1
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='votes')
     created = models.DateTimeField(auto_now_add=True)
