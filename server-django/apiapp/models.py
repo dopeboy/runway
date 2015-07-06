@@ -172,12 +172,12 @@ class Vote(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4,
                             editable=False)
     tag = models.ForeignKey(Tag, related_name='votes')
-    downvote_reason = models.ForeignKey(DownvoteReason)
+    downvote_reason = models.ForeignKey(DownvoteReason, null=True)
     value = models.IntegerField()  # 1 or -1
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='votes')
     created = models.DateTimeField(auto_now_add=True)
 
-    # For a given tag, the maximum number of votes a person can 
+    # For a given tag, the maximum number of votes a person can
     # cast for it is 1.
     class Meta:
         unique_together = ("tag", "owner")
