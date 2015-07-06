@@ -176,3 +176,8 @@ class Vote(models.Model):
     value = models.IntegerField()  # 1 or -1
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='votes')
     created = models.DateTimeField(auto_now_add=True)
+
+    # For a given tag, the maximum number of votes a person can 
+    # cast for it is 1.
+    class Meta:
+        unique_together = ("tag", "owner")

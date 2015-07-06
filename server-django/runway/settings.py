@@ -52,7 +52,7 @@ REST_FRAMEWORK = {
     )
 }
 
-REST_FRAMEWORK_TOKEN_EXPIRE_HOURS = 10000
+REST_FRAMEWORK_TOKEN_EXPIRE_HOURS = 24
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
