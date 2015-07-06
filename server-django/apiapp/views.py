@@ -49,9 +49,11 @@ class PhotoViewSet(viewsets.ModelViewSet):
     `update` and `destroy` actions.
 
     """
+    authentication_classes = (SessionAuthentication,
+                              BasicAuthentication,
+                              ExpiringTokenAuthentication)
     serializer_class = PhotoSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,
-                          IsOwnerOrReadOnly,)
+    permission_classes = (IsAuthenticated,IsOwnerOrReadOnly)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -243,13 +245,12 @@ class TagViewSet(viewsets.ModelViewSet):
     `update` and `destroy` actions.
 
     """
-    queryset = Tag.objects.all()
-    serializer_class = TagSerializer
     authentication_classes = (SessionAuthentication,
                               BasicAuthentication,
                               ExpiringTokenAuthentication)
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,
-                          IsOwnerOrReadOnly,)
+    permission_classes = (IsAuthenticated,IsOwnerOrReadOnly)
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -261,13 +262,13 @@ class VoteViewSet(viewsets.ModelViewSet):
     `update` and `destroy` actions.
 
     """
-    queryset = Vote.objects.all()
-    serializer_class = VoteSerializer
     authentication_classes = (SessionAuthentication,
                               BasicAuthentication,
                               ExpiringTokenAuthentication)
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,
                           IsOwnerOrReadOnly,)
+    queryset = Vote.objects.all()
+    serializer_class = VoteSerializer
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
