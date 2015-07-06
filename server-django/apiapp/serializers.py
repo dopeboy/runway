@@ -320,7 +320,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 class VoteSerializer(serializers.ModelSerializer):
     tag_uuid = serializers.UUIDField(read_only=False, source='tag')
-    downvote_reason_uuid = serializers.UUIDField(read_only=False,
+    downvote_reason_uuid = serializers.UUIDField(required=False,
+                                                 read_only=False,
                                                  source='downvote_reason')
 
     class Meta:
