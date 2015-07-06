@@ -245,6 +245,9 @@ class TagViewSet(viewsets.ModelViewSet):
     """
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
+    authentication_classes = (SessionAuthentication,
+                              BasicAuthentication,
+                              ExpiringTokenAuthentication)
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,
                           IsOwnerOrReadOnly,)
 
@@ -260,6 +263,9 @@ class VoteViewSet(viewsets.ModelViewSet):
     """
     queryset = Vote.objects.all()
     serializer_class = VoteSerializer
+    authentication_classes = (SessionAuthentication,
+                              BasicAuthentication,
+                              ExpiringTokenAuthentication)
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,
                           IsOwnerOrReadOnly,)
 
