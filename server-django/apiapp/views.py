@@ -106,7 +106,7 @@ class GenerateNextPhoto(APIView):
             # Mark it as viewed
             # me.photo_set.add(p)
 
-        serializer = self.serializer_class(p)
+        serializer = self.serializer_class(p, context={'request': self.request})
         return Response(serializer.data)
 
 generate_next_photo = GenerateNextPhoto.as_view()
