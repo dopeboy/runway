@@ -53,7 +53,7 @@ class PhotoViewSet(viewsets.ModelViewSet):
                               BasicAuthentication,
                               ExpiringTokenAuthentication)
     serializer_class = PhotoSerializer
-    permission_classes = (IsAuthenticated,IsOwnerOrReadOnly)
+    permission_classes = (IsAuthenticated, IsOwnerOrReadOnly)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -89,14 +89,15 @@ class GenerateNextPhoto(APIView):
         me = request.user
 
         # Find all the photos that I haven't seen and that I haven't made
-        photos = Photo.objects.all().exclude(
-                uuid__in=me.photo_set.all().values_list(
-                    'uuid', flat=True)).exclude(owner=me)
+        # photos = Photo.objects.all().exclude(
+        #         uuid__in=me.photo_set.all().values_list(
+        #             'uuid', flat=True)).exclude(owner=me)
+        photos = Photo.objects.all()
 
         # If there are no photos left, return a dummy
         # photo (note this doesn't get saved)
         if len(photos) == 0:
-            p = Photo(url='ohsnap', owner=me)
+            p = Photo(url='ohsnapnomorephotos.jpg', owner=me)
 
         else:
             # Randomly pick a photo
@@ -248,7 +249,7 @@ class TagViewSet(viewsets.ModelViewSet):
     authentication_classes = (SessionAuthentication,
                               BasicAuthentication,
                               ExpiringTokenAuthentication)
-    permission_classes = (IsAuthenticated,IsOwnerOrReadOnly)
+    permission_classes = (IsAuthenticated, IsOwnerOrReadOnly)
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
 
