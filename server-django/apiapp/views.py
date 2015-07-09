@@ -104,7 +104,7 @@ class GenerateNextPhoto(APIView):
             p = random.choice(photos)
 
             # Mark it as viewed
-            me.photo_set.add(p)
+            # me.photo_set.add(p)
 
         serializer = self.serializer_class(p)
         return Response(serializer.data)
