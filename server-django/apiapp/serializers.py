@@ -225,7 +225,7 @@ class TagSerializer(serializers.ModelSerializer):
 
         cursor = connection.cursor()
         cursor.execute('''SELECT
-        CAST("apiapp_downvotereason"."uuid" as varchar(32))
+        CAST("apiapp_downvotereason"."uuid" as varchar(36))
         as "downvotereason_uuid",
         "apiapp_downvotereason"."label" as "downvotereason_label",
         COUNT("apiapp_vote"."uuid") AS "count",
