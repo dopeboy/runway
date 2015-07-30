@@ -1,0 +1,20 @@
+https://docs.google.com/document/d/1lE7yqil7QzqZtHyg5Acx5K8JZc4T5CZYLq47QrqcjGo/edit
+
+Manish todo
+	tagView: rules for showing or not showing dialog
+	swiper, what to show when there’s nothing else to show?
+	Change FB SDK Id. We’re currently using a dev one.
+	fetch types/brands/reasons on login
+	Test leaderboard
+		cells should be un-clickable
+		two sections should work fine
+	Test getting kicked out on backend (i.e. token expiration and app re-login)
+
+
+
+
+
+
+
+
+
