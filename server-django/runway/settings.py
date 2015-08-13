@@ -27,7 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-INVITE_ONLY = True
+INVITE_ONLY = False
 
 # Application definition
 

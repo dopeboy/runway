@@ -59,7 +59,7 @@ class AuthTokenFacebookSerializer(serializers.Serializer):
             else:
                 if settings.INVITE_ONLY:
                     if not invite_code:
-                        msg = 'No invite code supplied.'
+                        msg = 'code_required'
                         raise serializers.ValidationError(msg)
 
                     # Check that the invite code is valid
@@ -69,7 +69,7 @@ class AuthTokenFacebookSerializer(serializers.Serializer):
                         # Check that it is active
                         if i.count == 0:
                             raise serializers.ValidationError(
-                                    'Expired invite code.')
+                                    'code_incorrect')
 
                         # All checked pass. Decrement the count
                         i.count = i.count - 1
@@ -77,7 +77,7 @@ class AuthTokenFacebookSerializer(serializers.Serializer):
 
                     except ObjectDoesNotExist:
                         raise serializers.ValidationError(
-                                'Invalid invite code.')
+                                'code_incorrect')
 
                 user = MyUser.objects.create_user(
                     email=fb_response_profile_info['email'],
