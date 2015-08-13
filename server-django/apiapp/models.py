@@ -181,3 +181,11 @@ class Vote(models.Model):
     # cast for it is 1.
     class Meta:
         unique_together = ("tag", "owner")
+
+
+class Invite(models.Model):
+    uuid = models.UUIDField(primary_key=True, default=uuid.uuid4,
+                            editable=False)
+    code = models.CharField(blank=False, max_length=256)
+    count = models.IntegerField(blank=False)
+    created = models.DateTimeField(auto_now_add=True)

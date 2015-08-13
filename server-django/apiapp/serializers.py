@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from apiapp.models import Photo, MyUser, ClothingType, Brand, \
-        Tag, Vote, DownvoteReason
+        Tag, Vote, DownvoteReason, Invite
 from django.contrib.auth import authenticate
 import requests
 import json
@@ -10,15 +10,18 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
 from django.db import connection
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
 
 class AuthTokenFacebookSerializer(serializers.Serializer):
     fb_access_token = serializers.CharField(required=True)
+    invite_code = serializers.CharField(required=False)
 
     def validate(self, attrs):
         fb_access_token = attrs.get('fb_access_token')
+        invite_code = attrs.get('invite_code')
 
         if fb_access_token:
             # Get user profile information
@@ -54,6 +57,28 @@ class AuthTokenFacebookSerializer(serializers.Serializer):
 
             # Sign up
             else:
+                if settings.INVITE_ONLY:
+                    if not invite_code:
+                        msg = 'No invite code supplied.'
+                        raise serializers.ValidationError(msg)
+
+                    # Check that the invite code is valid
+                    try:
+                        i = Invite.objects.get(code=invite_code)
+
+                        # Check that it is active
+                        if i.count == 0:
+                            raise serializers.ValidationError(
+                                    'Expired invite code.')
+
+                        # All checked pass. Decrement the count
+                        i.count = i.count - 1
+                        i.save()
+
+                    except ObjectDoesNotExist:
+                        raise serializers.ValidationError(
+                                'Invalid invite code.')
+
                 user = MyUser.objects.create_user(
                     email=fb_response_profile_info['email'],
                     gender=fb_response_profile_info['gender'][0].upper(),

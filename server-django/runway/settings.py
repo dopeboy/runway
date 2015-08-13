@@ -16,7 +16,6 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
@@ -28,6 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+INVITE_ONLY = True
 
 # Application definition
 
@@ -49,7 +49,8 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'apiapp.authentication.ExpiringTokenAuthentication'
-    )
+    ),
+    'NON_FIELD_ERRORS_KEY': 'errors'
 }
 
 REST_FRAMEWORK_TOKEN_EXPIRE_HOURS = 24
@@ -125,7 +126,6 @@ DATABASES['default'] = dj_database_url.config()
 
 # Honor the 'X-Forwarded-Proto' header for request.is_secure()
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
 
 LOGGING = {
     'version': 1,

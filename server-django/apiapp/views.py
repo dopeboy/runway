@@ -27,6 +27,8 @@ from rest_framework.decorators \
 import logging
 from rest_framework.views import APIView
 import random
+from django.db.models import Sum
+from django.db.models.functions import Coalesce
 
 EXPIRE_HOURS = getattr(settings, 'REST_FRAMEWORK_TOKEN_EXPIRE_HOURS')
 logger = logging.getLogger(__name__)
@@ -58,12 +60,15 @@ class PhotoViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
-    def get_queryset(self):
-        """
-        This view should return a list of all the photos
-        for the currently authenticated user.
-        """
-        return Photo.objects.filter(owner=self.request.user)
+    def list(self, request):
+        me = request.user
+        queryset = Photo.objects.filter(owner=self.request.user)
+        serializer = PhotoSerializer(queryset, many=True,
+                                     context={'request': self.request})
+        response_data = {'images': serializer.data}
+
+        return HttpResponse(json.dumps(addUserKarma(response_data, me)),
+                            content_type="application/json")
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
@@ -106,10 +111,21 @@ class GenerateNextPhoto(APIView):
             # Mark it as viewed
             # me.photo_set.add(p)
 
-        serializer = self.serializer_class(p, context={'request': self.request})
-        return Response(serializer.data)
+        serializer = self.serializer_class(p,
+                                           context={'request': self.request})
+        response_data = {'image': serializer.data}
+
+        return HttpResponse(json.dumps(addUserKarma(response_data, me)),
+                            content_type="application/json")
 
 generate_next_photo = GenerateNextPhoto.as_view()
+
+
+# This will add the user's karma to the serialized data
+def addUserKarma(serializedData, user):
+    serializedData["user_karma"] = user.photos.all().aggregate(
+            sum=Coalesce(Sum('tags__votes__value'), 0))['sum']
+    return serializedData
 
 
 # Return two lists: facebook friends and others
@@ -143,7 +159,7 @@ class GetLeaderboardUsers(APIView):
             response_data = {'friends': fb_user_serializer.data,
                              'others': other_user_serializer.data}
 
-            return HttpResponse(json.dumps(response_data),
+            return HttpResponse(json.dumps(addUserKarma(response_data, me)),
                                 content_type="application/json")
 
 get_leaderboard_users = GetLeaderboardUsers.as_view()
@@ -166,7 +182,10 @@ class GetFavoritePhotos(APIView):
         serializer = self.serializer_class(
                 photos, many=True, context={'request': self.request})
 
-        return Response(serializer.data)
+        response_data = {'images': serializer.data}
+
+        return HttpResponse(json.dumps(addUserKarma(response_data, me)),
+                            content_type="application/json")
 
 get_favorite_photos = GetFavoritePhotos.as_view()
 
@@ -192,8 +211,24 @@ class ObtainExpiringAuthToken(ObtainAuthToken):
                 token.created = datetime.datetime.utcnow()
                 token.save()
 
+            ct_queryset = ClothingType.objects.all()
+            ct_serializer = ClothingTypeSerializer(
+                    ct_queryset, many=True, context={'request': self.request})
+
+            b_queryset = Brand.objects.all()
+            b_serializer = BrandTypeSerializer(
+                    b_queryset, many=True, context={'request': self.request})
+
+            dvr_queryset = DownvoteReason.objects.all()
+            dvr_serializer = DownvoteReasonSerializer(
+                    dvr_queryset, many=True, context={'request': self.request})
+
             response_data = {'access_token': token.key,
-                             'karma': -999}
+                             'clothing_types': ct_serializer.data,
+                             'brands': b_serializer.data,
+                             'downvote_reasons': dvr_serializer.data}
+            response_data = addUserKarma(response_data, user)
+
             return HttpResponse(json.dumps(response_data),
                                 content_type="application/json")
 
