@@ -50,7 +50,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'apiapp.authentication.ExpiringTokenAuthentication'
     ),
-    'NON_FIELD_ERRORS_KEY': 'errors'
+    'NON_FIELD_ERRORS_KEY': 'error'
 }
 
 REST_FRAMEWORK_TOKEN_EXPIRE_HOURS = 24
