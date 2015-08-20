@@ -16,7 +16,7 @@
 
 + (NSString *)accessToken;
 
-+ (BOOL)loginOnSeparateThreadWithCompletionBlock:(void (^)(bool success))callbackBlock;
++ (void)loginOnSeparateThreadWithCompletionBlock:(void (^)(NSString *errorMessage))callbackBlock;
 
 + (NSArray *)getMyImages;
 + (NSArray *)getFavoriteImages;

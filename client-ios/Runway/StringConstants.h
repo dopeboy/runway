@@ -11,11 +11,11 @@
 
 #define STR_FACEBOOK_PROCEED_BUTTON_FMT     @"Proceed as %@"
 
-#define STR_SIDE_MENU_BROWSE                @"Browse..."
+#define STR_SIDE_MENU_BROWSE                @"Swipe"
 #define STR_SIDE_MENU_MY_PICTURES           @"My Pictures"
 #define STR_SIDE_MENU_FAVORITES             @"Favorites"
 #define STR_SIDE_MENU_LEADERBOARD           @"Leaderboard"
-#define STR_SIDE_MENU_SIGNOUT               @"Sign Out"
+#define STR_SIDE_MENU_SIGNOUT               @"Log Out"
 
 #define STR_UPVOTE_COUNT                    @"Upvotes"
 #define STR_DOWNVOTE_COUNT                  @"Downvotes"

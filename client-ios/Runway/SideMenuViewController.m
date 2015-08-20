@@ -155,7 +155,6 @@
         t_ImageListType listType =  (self.lastCellIndexSelected == 1) ? ImageListTypeMyImages    :
                                     (self.lastCellIndexSelected == 2) ? ImageListTypeFavorites   :
                                     (self.lastCellIndexSelected == 3) ? ImageListTypeLeaderboard : INVALID_INDEX;
-
         [vc setupListOfType:listType usingTitle:self.menuTitles[self.lastCellIndexSelected]];
     }else if([segue.identifier isEqualToString:BROWSE_SEGUE_IDENTIFIER]){
         UINavigationController *navVC = segue.destinationViewController;

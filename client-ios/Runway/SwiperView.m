@@ -10,6 +10,7 @@
 #import "Image.h"
 #import "Tag.h"
 #import "DownvoteReasonsView.h"
+#import <sys/sysctl.h>
 
 #import "Clothing.h"
 #import "Brand.h"
@@ -83,7 +84,13 @@
 
 - (void)setBlur:(CGFloat)blur
 {
-    if(!self.blurView && self.imageView.image){
+    size_t size;
+    sysctlbyname("hw.machine", NULL, &size, NULL, 0);
+    char *machine = malloc(size);
+    sysctlbyname("hw.machine", machine, &size, NULL, 0);
+    NSString *platform = [NSString stringWithCString:machine encoding:NSUTF8StringEncoding];
+    
+    if(!self.blurView && self.imageView.image && ![platform containsString:@"iPhone5"]){
         UIImageView *blurView = [[UIImageView alloc] initWithFrame:self.imageView.frame];
         blurView.image = [self.imageView.image applyLightEffect];
         [self insertSubview:blurView aboveSubview:self.imageView];
@@ -91,6 +98,36 @@
         self.blurView = blurView;
     }
     self.blurView.alpha = MIN(1, (blur * blur * blur) * 3);    //cube it and triple it, since 0 < x < 1, it will blur slowly at first and quickly later
+}
+
+- (CGFloat)imageHeight
+{
+    return self.imageView.frame.size.height;
+}
+
+- (NSInteger)numberOfTags
+{
+    NSInteger tagCount = 0;
+    for(UIView *v in self.subviews){
+        if([v isKindOfClass:[TagView class]]){
+            tagCount++;
+        }
+    }
+    return tagCount;
+}
+
+- (void)setReveal:(BOOL)reveal
+{
+    _reveal = reveal;
+    
+    for(UIView *v in self.subviews){
+        if([v isKindOfClass:[TagView class]]){
+            TagView *t = (TagView *)v;
+            t.reveal = YES;
+            
+            [t setNeedsDisplay];
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -363,6 +400,23 @@
 {
     [self.image deleteTag:tag];
     [tagView removeFromSuperview];
+}
+
+- (void)changedVoteState
+{
+    BOOL anythingVotedOn = NO;
+
+    for(UIView *v in self.subviews){
+        if([v isKindOfClass:[TagView class]]){
+            TagView *t = (TagView *)v;
+            if(t.voteState != VoteNone){
+                anythingVotedOn = YES;
+                break;
+            }
+        }
+    }
+    
+    [self.delegate voteStatusChanged:anythingVotedOn];
 }
 
 #pragma mark - UIView Overrides

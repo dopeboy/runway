@@ -13,10 +13,13 @@
 #import "Image.h"
 #import "ImageListCell.h"
 #import "FacebookPhoto.h"
+#import "CenteredLabel.h"
 
 #import "RunwayServices.h"
 #import "CommonConstants.h"
 #import "StringConstants.h"
+
+#import "HelpView.h"
 
 #define BROWSE_SEGUE_IDENTIFIER         @"browse segue"
 #define FACEBOOK_SEGUE_IDENTIFIER       @"facebook segue"
@@ -300,6 +303,25 @@
     [super viewDidLoad];
     
     [self.view addGestureRecognizer:self.revealViewController.panGestureRecognizer];
+}
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    
+    NSString *titleText = self.navigationItem.title;
+    UIFont* titleFont = UINavigationBar.appearance.titleTextAttributes[NSFontAttributeName];
+    CGFloat titleWidth = [titleText sizeWithAttributes:@{NSFontAttributeName: titleFont}].width;
+    
+    CenteredLabel *navLabel = [[CenteredLabel alloc] initWithFrame:CGRectMake(0, 0, titleWidth, 20)];
+    navLabel.backgroundColor = UINavigationBar.appearance.titleTextAttributes[NSBackgroundColorAttributeName];
+    navLabel.textColor = UINavigationBar.appearance.titleTextAttributes[NSForegroundColorAttributeName];
+    navLabel.font = titleFont;
+    navLabel.textAlignment = NSTextAlignmentCenter;
+    navLabel.text = titleText;
+    self.navigationItem.titleView = navLabel;
+    
+//    [HelpView showIfApplicableInsideOfView:self.view usingImageNamed:@"Logo.png" andHelpViewId:1];
 }
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender

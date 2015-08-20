@@ -7,8 +7,8 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "Tag.h"
 
-@class Tag;
 @class TagView;
 @class DownvoteReason;
 
@@ -18,12 +18,15 @@
 - (void)selectedTagView:(TagView *)tagView;
 - (void)editPropertiesForTag:(Tag *)tag;
 - (void)deleteTag:(Tag *)tag andRemoveTagView:(TagView *)tagView;
+- (void)changedVoteState;
 @end
 
 @interface TagView : UIView
 
 @property (nonatomic) BOOL editing;
 @property (nonatomic) BOOL selected;
+@property (nonatomic) BOOL reveal;
+@property (nonatomic, readonly) t_Vote voteState;
 
 - (TagView *)initWithTag:(Tag *)tag
         usingScaleFactor:(CGPoint)scaleFactor

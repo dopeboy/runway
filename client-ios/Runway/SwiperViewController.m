@@ -14,13 +14,18 @@
 #import "Image.h"
 #import "Tag.h"
 #import "TagView.h"
+#import "RoundButton.h"
+#import "HelpView.h"
 
 #import "EditTagDetailsViewController.h"
 #import "ImageListViewController.h"
 
 #import "CommonConstants.h"
 
-#define EDIT_SEGUE_NAME     @"edit segue"
+#define SWIPE_BUTTON_TEXT_SUBMIT    @"SUBMIT"
+#define SWIPE_BUTTON_TEXT_NEXT      @"NEXT"
+
+#define EDIT_SEGUE_NAME             @"edit segue"
 
 @interface SwiperViewController() <SwiperDelegate, EditTagDetailsDelegate>
 @property (nonatomic) BOOL hasBeenSetup;
@@ -41,8 +46,11 @@
 
 @property (nonatomic, strong) UIBarButtonItem *leftButtonItem;
 @property (nonatomic, strong) UIButton *karmaButton;
-@property (nonatomic, strong) IBOutlet UIButton *swipeButton;
+@property (nonatomic, strong) RoundButton *addTagButton;
+@property (nonatomic, strong) IBOutlet RoundButton *swipeButton;
 @property (nonatomic, strong) IBOutlet UITableView *tableForReasons;
+@property (nonatomic, strong) IBOutlet NSLayoutConstraint *swipeButtonHeightConstraint;
+@property (nonatomic, weak) UIView *helpView;
 @end
 
 @implementation SwiperViewController
@@ -193,10 +201,16 @@
     [self.revealViewController revealToggle:sender];
 }
 
-- (IBAction)nextButtonPressed:(id)sender
+- (IBAction)nextButtonPressed:(UIButton *)sender
 {
-    self.swipeButton.enabled = NO;
-    [self.currentSwipe forceSwipeOut];
+    if([sender.titleLabel.text isEqualToString:SWIPE_BUTTON_TEXT_SUBMIT]){
+        [self.swipeButton setTitle:SWIPE_BUTTON_TEXT_NEXT forState:UIControlStateNormal];
+        self.currentSwipe.reveal = YES;
+        self.currentSwipe.gestureEnabled = YES;
+    }else{
+        self.swipeButton.enabled = NO;
+        [self.currentSwipe forceSwipeOut];
+    }
 }
 
 - (void)editButtonPressed:(id)sender
@@ -204,38 +218,56 @@
     self.currentSwipe.editing = YES;
     
     self.leftButtonItem = self.navigationItem.leftBarButtonItem;
-    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addButtonPressed:)];
+    self.navigationItem.leftBarButtonItem = nil;
+    self.navigationItem.hidesBackButton = YES;
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(doneEditButtonPressed:)];
+    
+    RoundButton *addTagButton = [RoundButton buttonWithType:UIButtonTypeCustom];
+    [addTagButton addTarget:self action:@selector(addButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
+    [addTagButton setTitle:@"+" forState:UIControlStateNormal];
+    [self.view addSubview:addTagButton];
+    self.addTagButton = addTagButton;
 }
 
 - (void)doneEditButtonPressed:(id)sender
 {
-    self.currentSwipe.editing = NO;
-
-    self.saveCurtainVisible = YES;
-
-    self.navigationItem.leftBarButtonItem = self.leftButtonItem;
-    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemEdit target:self action:@selector(editButtonPressed:)];
-   
+    BOOL atLeastOneTag = (self.currentSwipe.numberOfTags > 0);
     
-    BOOL needToPop = (!self.image.GUID);    //if no GUID, then it's new, and we need to pop
-    dispatch_async(dispatch_queue_create("get tag details", NULL), ^{
-        [self.image saveEditChanges];
+    if(atLeastOneTag){
+        self.currentSwipe.editing = NO;
         
-        dispatch_async(dispatch_get_main_queue(), ^{
-            self.saveCurtainVisible = NO;
+        self.saveCurtainVisible = YES;
+        
+        self.navigationItem.leftBarButtonItem = self.leftButtonItem;
+        self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemEdit target:self action:@selector(editButtonPressed:)];
+        
+        [self.addTagButton removeFromSuperview];
+        self.addTagButton = nil;
+        
+        BOOL needToPop = (!self.image.GUID);    //if no GUID, then it's new, and we need to pop
+        dispatch_async(dispatch_queue_create("get tag details", NULL), ^{
+            [self.image saveEditChanges];
             
-            if(needToPop){
-                if([self.navigationController.viewControllers[0] isKindOfClass:[ImageListViewController class]]){
-                    ImageListViewController *vc = (ImageListViewController *)self.navigationController.viewControllers[0];
-                    [vc refreshTable];
-
-                    [self.navigationController popToRootViewControllerAnimated:YES];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                self.saveCurtainVisible = NO;
+                
+                if(needToPop){
+                    if([self.navigationController.viewControllers[0] isKindOfClass:[ImageListViewController class]]){
+                        ImageListViewController *vc = (ImageListViewController *)self.navigationController.viewControllers[0];
+                        [vc refreshTable];
+                        
+                        [self.navigationController popToRootViewControllerAnimated:YES];
+                    }
                 }
-            }
+            });
         });
-    });
-
+    }else{
+        [[[UIAlertView alloc] initWithTitle:@"No Tags added"
+                                    message:@"You must add at least one tag to save. Press OK to add tags and Cancel to exit."
+                                   delegate:self
+                          cancelButtonTitle:@"Cancel"
+                          otherButtonTitles:@"Ok", nil] show];
+    }
 }
 
 - (void)addButtonPressed:(id)sender
@@ -282,6 +314,7 @@
     [self setupNextSwiper];
     
     self.swipeButton.enabled = YES;
+    [self.swipeButton setTitle:SWIPE_BUTTON_TEXT_NEXT forState:UIControlStateNormal];
 }
 
 - (void)editPropertiesForTag:(Tag *)tag
@@ -292,6 +325,17 @@
 - (void)swiperView:(SwiperView *)swiperView updatedSwipedPercent:(CGFloat)percent;
 {
     self.nextSwipe.blur = fmin(fmax(percent, 0.0), 1.0);
+}
+
+- (void)voteStatusChanged:(BOOL)anythingVoted
+{
+    if(anythingVoted){
+        [self.swipeButton setTitle:SWIPE_BUTTON_TEXT_SUBMIT forState:UIControlStateNormal];
+        self.currentSwipe.gestureEnabled = NO;
+    }else{
+        [self.swipeButton setTitle:SWIPE_BUTTON_TEXT_NEXT forState:UIControlStateNormal];
+        self.currentSwipe.gestureEnabled = YES;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -338,7 +382,7 @@
     if(!self.viewWillAppearCalled){
         self.viewWillAppearCalled = YES;
         
-        self.view.backgroundColor = [UIColor redColor];
+        //self.view.backgroundColor = [UIColor redColor];
         [self karmaUpdated:nil];        //init karma label to 0. Make sure to call this before network calls that will update it via notif.
 
         //init view if necessary
@@ -389,6 +433,37 @@
             }
         }
     }
+    
+    if(self.allowSwipe){
+        self.helpView = [HelpView showIfApplicableInsideOfView:self.view usingImageNamed:@"helpViewSwipe.png" andHelpViewId:1];
+    }else if(self.startInEditMode){
+        BOOL atLeastOneTag = (self.currentSwipe.numberOfTags > 0);
+        if(atLeastOneTag){
+            self.helpView = [HelpView showIfApplicableInsideOfView:self.view usingImageNamed:@"helpViewPostTag.png" andHelpViewId:2];
+        }else{
+            self.helpView = [HelpView showIfApplicableInsideOfView:self.view usingImageNamed:@"helpViewPostImage.png" andHelpViewId:3];
+        }
+    }
+}
+
+- (void)viewWillLayoutSubviews
+{
+    [super viewWillLayoutSubviews];
+    
+    CGFloat swiperBottom = self.currentSwipe.frame.origin.y + self.currentSwipe.imageHeight;
+    CGFloat remainingHeight = self.view.frame.size.height - swiperBottom;
+    
+    CGRect buttonFrame      = self.swipeButton.frame;
+    buttonFrame.origin.y    = swiperBottom + PADDING;
+    buttonFrame.size.height = remainingHeight - PADDING - PADDING;
+    buttonFrame.size.width  = buttonFrame.size.height;
+    buttonFrame.origin.x    = self.view.center.x - (buttonFrame.size.width / 2);
+    self.swipeButton.frame  = buttonFrame;
+    
+    self.addTagButton.backgroundColor = self.swipeButton.backgroundColor;
+    self.addTagButton.frame = self.swipeButton.frame;
+    
+    if(self.helpView) [self.view addSubview:self.helpView];
 }
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
@@ -398,6 +473,15 @@
         EditTagDetailsViewController *vc = (EditTagDetailsViewController *)navVC.topViewController;
         [vc setupForTag:sender
            withDelegate:self];
+    }
+}
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if(buttonIndex == 0){           //cancel
+        [self.navigationController popToRootViewControllerAnimated:YES];
+    }else if(buttonIndex == 1){     //ok
+        //do nothing
     }
 }
 
