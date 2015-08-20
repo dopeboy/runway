@@ -8,6 +8,7 @@
 
 #import "FacebookLoginViewController.h"
 #import "RunwayServices.h"
+#import "AccessCodeViewController.h"
 
 #import "CommonConstants.h"
 #import "StringConstants.h"
@@ -16,14 +17,19 @@
 #import <FBSDKLoginKit/FBSDKLoginKit.h>
 
 #define LOGIN_SEGUE_NAME            @"perform login"
+#define ACCESS_CODE_SEGUE_NAME      @"modal access code"
 
-@interface FacebookLoginViewController () <FBSDKLoginButtonDelegate>
+#define DEFAULTS_CODE               @"defaults access code"
+
+@interface FacebookLoginViewController () <FBSDKLoginButtonDelegate, AccessCodeDelegate>
 
 @property (nonatomic, weak) IBOutlet FBSDKLoginButton *loginButton;
 @property (nonatomic, weak) IBOutlet UIButton *proceedButton;
 @property (nonatomic, weak) IBOutlet UIActivityIndicatorView *spinner;
 
 @property (nonatomic) BOOL hasAppeared;
+@property (nonatomic) BOOL didAppearCalled;
+@property (nonatomic, strong) NSString *needsToDisplayCodeScreenMessage;
 @end
 
 @implementation FacebookLoginViewController
@@ -53,10 +59,19 @@
     FBSDKProfile *profile = [FBSDKProfile currentProfile];
     if([FBSDKAccessToken currentAccessToken] && profile){
         [self.spinner startAnimating];
-        [RunwayServices loginOnSeparateThreadWithCompletionBlock:^(bool success){
-            if(success){
+        
+        [RunwayServices loginOnSeparateThreadWithCompletionBlock:^(NSString *errorMessage){
+            if(!errorMessage){
                 [self performSegueWithIdentifier:LOGIN_SEGUE_NAME sender:self];
                 [self updateProceedButton];
+            }else if([errorMessage isEqualToString:@"code_required"] || [errorMessage isEqualToString:@"code_incorrect"]){
+                NSString *messageForCode = [errorMessage isEqualToString:@"code_required"] ? @"Code required." : @"Incorrect code.\nPlease try again.";
+
+                if(self.didAppearCalled){
+                    [self performSegueWithIdentifier:ACCESS_CODE_SEGUE_NAME sender:messageForCode];
+                }else{
+                    self.needsToDisplayCodeScreenMessage = messageForCode;
+                }
             }else{
                 [[[UIAlertView alloc] initWithTitle:@"Could not log into Runway"
                                             message:@"Facebook logged in successfully, but there was a problem logging into runway. Please try again later."
@@ -128,6 +143,23 @@ didCompleteWithResult:(FBSDKLoginManagerLoginResult *)result
 
 ////////////////////////////////////////////////////////////////////////
 //
+// AccessCodeDelegate Implementation
+//
+////////////////////////////////////////////////////////////////////////
+#pragma mark - AccessCodeDelegate Implementation
+- (void)accessCodeEntered:(NSString *)code
+{
+    [self dismissViewControllerAnimated:YES completion:^{
+        [self updateProceedButton];
+        if(code){
+            [[NSUserDefaults standardUserDefaults] setObject:code forKey:DEFAULTS_CODE];
+            [self attemptToEnter];
+        }
+    }];
+}
+
+////////////////////////////////////////////////////////////////////////
+//
 // UIViewController Overrides
 //
 ////////////////////////////////////////////////////////////////////////
@@ -156,6 +188,28 @@ didCompleteWithResult:(FBSDKLoginManagerLoginResult *)result
         self.loginButton.backgroundColor = [UIColor blackColor];
         
         [self attemptToEnter];
+    }
+}
+
+- (void)viewDidAppear:(BOOL)animated
+{
+    [super viewDidAppear:animated];
+    
+    if(!self.didAppearCalled){
+        self.didAppearCalled = YES;
+        
+        if(self.needsToDisplayCodeScreenMessage){
+            [self performSegueWithIdentifier:ACCESS_CODE_SEGUE_NAME sender:self.needsToDisplayCodeScreenMessage];
+            self.needsToDisplayCodeScreenMessage = nil;
+        }
+    }
+}
+
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
+{
+    if([segue.identifier isEqualToString:ACCESS_CODE_SEGUE_NAME]){
+        AccessCodeViewController *vc = segue.destinationViewController;
+        [vc setupWithDelegate:self andMessage:sender];
     }
 }
 

@@ -17,7 +17,8 @@
 #import <FBSDKCoreKit/FBSDKCoreKit.h>
 #import <FBSDKLoginKit/FBSDKLoginKit.h>
 
-#define BASE_URL    @"https://enigmatic-garden-4019.herokuapp.com"
+#define BASE_URL                    @"https://enigmatic-garden-4019.herokuapp.com"
+#define DEFAULTS_CODE               @"defaults access code"
 
 typedef enum{
     HTTPMethodGet,
@@ -36,41 +37,56 @@ typedef enum{
 //
 ////////////////////////////////////////////////////////////////////////
 #pragma mark Public Functions
-+ (BOOL)loginOnSeparateThreadWithCompletionBlock:(void (^)(bool success))callbackBlock
++ (void)loginOnSeparateThreadWithCompletionBlock:(void (^)(NSString *errorMessage))callbackBlock
 {
     dispatch_async(dispatch_queue_create("login", NULL), ^{
+        NSMutableDictionary *dataToSend = [@{
+                                             @"fb_access_token" : [FBSDKAccessToken currentAccessToken].tokenString,
+                                             } mutableCopy];
+
+        //load invite code from defaults and attach to "data to send" if it's there.
+        NSString *accessCode = [[NSUserDefaults standardUserDefaults] objectForKey:DEFAULTS_CODE];
+        if(accessCode) dataToSend[@"invite_code"] = accessCode;
+
         NSDictionary *returnData = [self getJSONFromPath:@"/login/"
                                          usingHTTPMethod:HTTPMethodPost
-                                             sendingData:@{
-                                                           @"fb_access_token" : [FBSDKAccessToken currentAccessToken].tokenString,
-                                                           }
-                                    ];
+                                             sendingData:dataToSend];
         
         dispatch_async(dispatch_get_main_queue(), ^{
             if(returnData){
-                [self setAccessToken:returnData[@"access_token"]];
-                callbackBlock(YES);
+                NSString *errorMessage = [returnData[@"error"] lastObject];
+                if([errorMessage isEqualToString:@"code_required"] || [errorMessage isEqualToString:@"code_incorrect"]){
+                    callbackBlock(errorMessage);
+                }else{
+                    [self setAccessToken:returnData[@"access_token"]];
+                    
+                    [self getClothingTypesFromDictionary:returnData[@"clothing_types"]];
+                    [self getBrandNamesFromDictionary:returnData[@"brands"]];
+                    [self getDownvoteReasonsFromDictionary:returnData[@"downvote_reasons"]];
+                    
+                    callbackBlock(nil);
+                }
             }else{
                 [self setAccessToken:@""];
-                callbackBlock(NO);
+                callbackBlock(@"unkown");
             }
         });
     });
-    
-    return YES;
 }
 
 + (NSArray *)getMyImages
 {
-    NSArray *returnData = [self getJSONFromPath:@"/photos/"
+    NSDictionary *returnData = [self getJSONFromPath:@"/photos/"
                                 usingHTTPMethod:HTTPMethodGet
                                     sendingData:@{
                                                   //nothing
                                                   }
                            ];
     
-    NSMutableArray *myImages = [NSMutableArray arrayWithCapacity:returnData.count];
-    for(NSDictionary *item in returnData){
+    NSArray *imageData = returnData[@"images"];
+    
+    NSMutableArray *myImages = [NSMutableArray arrayWithCapacity:imageData.count];
+    for(NSDictionary *item in imageData){
         [myImages addObject:[self imageFromDictionary:item iOwnIt:YES]];
     }
 
@@ -79,15 +95,17 @@ typedef enum{
 
 + (NSArray *)getFavoriteImages
 {
-    NSArray *returnData = [self getJSONFromPath:@"/photos/favorites/"
+    NSDictionary *returnData = [self getJSONFromPath:@"/photos/favorites/"
                                 usingHTTPMethod:HTTPMethodGet
                                     sendingData:@{
                                                   //nothing
                                                   }
                            ];
     
-    NSMutableArray *favoriteImages = [NSMutableArray arrayWithCapacity:returnData.count];
-    for(NSDictionary *item in returnData){
+    NSArray *imageData = returnData[@"images"];
+
+    NSMutableArray *favoriteImages = [NSMutableArray arrayWithCapacity:imageData.count];
+    for(NSDictionary *item in imageData){
         [favoriteImages addObject:[self imageFromDictionary:item iOwnIt:NO]];
     }
     
@@ -130,7 +148,7 @@ typedef enum{
                                                        }
                                 ];
 
-    return [self imageFromDictionary:returnData iOwnIt:iOwnIt];
+    return [self imageFromDictionary:returnData[@"image"] iOwnIt:iOwnIt];
 }
 
 + (Image *)getNextImage
@@ -164,68 +182,17 @@ typedef enum{
 
 + (NSArray *)getClothingTypes
 {
-    static NSArray *cache = nil;
-    if(!cache){
-        NSArray *returnData = [self getJSONFromPath:@"/clothingtypes/"
-                                    usingHTTPMethod:HTTPMethodGet
-                                        sendingData:@{
-                                                      //nothing
-                                                      }
-                               ];
-        
-        NSMutableArray *clothingTypes = [NSMutableArray arrayWithCapacity:returnData.count];
-        for(NSDictionary *item in returnData){
-            [clothingTypes addObject:[[Clothing alloc] initWithGUID:item[@"clothing_type_uuid"]
-                                                            andName:item[@"clothing_type_label"]]];
-        }
-        
-        cache = clothingTypes;
-    }
-    return cache;
+    return [self getClothingTypesFromDictionary:nil];
 }
 
 + (NSArray *)getBrandNames
 {
-    static NSArray *cache = nil;
-    if(!cache){
-        NSArray *returnData = [self getJSONFromPath:@"/brands/"
-                                    usingHTTPMethod:HTTPMethodGet
-                                        sendingData:@{
-                                                      //nothing
-                                                      }
-                               ];
-        
-        NSMutableArray *brandNames = [NSMutableArray arrayWithCapacity:returnData.count];
-        for(NSDictionary *item in returnData){
-            [brandNames addObject:[[Brand alloc] initWithGUID:item[@"brand_uuid"]
-                                                      andName:item[@"brand_name"]]];
-        }
-        
-        cache = brandNames;
-    }
-    return cache;
+    return [self getBrandNamesFromDictionary:nil];
 }
 
 + (NSArray *)getDownvoteReasons
 {
-    static NSArray *cache = nil;
-    if(!cache){
-        NSArray *returnData = [self getJSONFromPath:@"/downvotereasons/"
-                                    usingHTTPMethod:HTTPMethodGet
-                                        sendingData:@{
-                                                      //nothing
-                                                      }
-                               ];
-        
-        NSMutableArray *downvoteReasons = [NSMutableArray arrayWithCapacity:returnData.count];
-        for(NSDictionary *item in returnData){
-            [downvoteReasons addObject:[[DownvoteReason alloc] initWithGUID:item[@"downvotereason_uuid"]
-                                                                    andName:item[@"downvotereason_label"]]];
-        }
-        
-        cache = downvoteReasons;
-    }
-    return cache;
+    return [self getDownvoteReasonsFromDictionary:nil];
 }
 
 + (BOOL)getVoteInformationForTagWithGUID:(NSString *)tagGUID
@@ -383,15 +350,20 @@ typedef enum{
     if(response.statusCode == 403){
         //we will deal with this below once the data is parsed.
     }else if((response.statusCode < 200) || (response.statusCode > 299)){
-        [self logHTTPError:[NSString stringWithFormat:@"HTTP(%@) %zd for request to '%@' with data: %@",//\n%@",
-                                                      request.HTTPMethod,
-                                                      response.statusCode,
-                                                      urlPath,
-                                                      jsonString//,
-                                                      //[NSString stringWithUTF8String:serverData.bytes]
-                            ]
-         ];
-        serverData = nil;
+        if([urlPath isEqualToString:@"/login/"] && (response.statusCode == 400)){
+            //here, we got a 400 trying to log in, which is acceptable.
+        }else{
+            [self logHTTPError:[NSString stringWithFormat:@"HTTP(%@) %zd for request to '%@' with data: %@",//\n%@",
+                                request.HTTPMethod,
+                                response.statusCode,
+                                urlPath,
+                                jsonString//,
+                                //[NSString stringWithUTF8String:serverData.bytes]
+                                ]
+             ];
+            
+            serverData = nil;
+        }
     }else if(httpError){
         [self logHTTPError:[NSString stringWithFormat:@"OTHER ERROR: %@", httpError.localizedDescription]];
         serverData = nil;
@@ -410,8 +382,8 @@ typedef enum{
             retying = YES;
             
             dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-            [self loginOnSeparateThreadWithCompletionBlock:^(bool success){
-                if(success){
+            [self loginOnSeparateThreadWithCompletionBlock:^(NSString *errorMessage){
+                if(!errorMessage){
                     //retry
                     jsonReceivedData = [self getJSONFromPath:urlPath usingHTTPMethod:method sendingData:data];
                 }else{
@@ -428,10 +400,10 @@ typedef enum{
         jsonReceivedData = nil;
     }
 
-    if([jsonReceivedData isKindOfClass:[NSDictionary class]] && jsonReceivedData[@"karma"]){
+    if([jsonReceivedData isKindOfClass:[NSDictionary class]] && jsonReceivedData[@"user_karma"]){
         [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_KARMA_UPDATED
                                                             object:self
-                                                          userInfo:@{NOTIFICATION_KARMA_UPDATED : jsonReceivedData[@"karma"]}];
+                                                          userInfo:@{NOTIFICATION_KARMA_UPDATED : jsonReceivedData[@"user_karma"]}];
     }
     
     return jsonReceivedData;
@@ -518,6 +490,73 @@ typedef enum{
     
     return tag;
 }
+
++ (NSArray *)getClothingTypesFromDictionary:(NSDictionary *)data
+{
+    static NSArray *cache = nil;
+    if(!cache){
+        NSArray *returnData = data ?: [self getJSONFromPath:@"/clothingtypes/"
+                                            usingHTTPMethod:HTTPMethodGet
+                                                sendingData:@{
+                                                              //nothing
+                                                              }
+                                       ];
+        
+        NSMutableArray *clothingTypes = [NSMutableArray arrayWithCapacity:returnData.count];
+        for(NSDictionary *item in returnData){
+            [clothingTypes addObject:[[Clothing alloc] initWithGUID:item[@"clothing_type_uuid"]
+                                                            andName:item[@"clothing_type_label"]]];
+        }
+        
+        cache = clothingTypes;
+    }
+    return cache;
+}
+
++ (NSArray *)getBrandNamesFromDictionary:(NSDictionary *)data
+{
+    static NSArray *cache = nil;
+    if(!cache){
+        NSArray *returnData = data ?: [self getJSONFromPath:@"/brands/"
+                                            usingHTTPMethod:HTTPMethodGet
+                                                sendingData:@{
+                                                              //nothing
+                                                              }
+                                       ];
+        
+        NSMutableArray *brandNames = [NSMutableArray arrayWithCapacity:returnData.count];
+        for(NSDictionary *item in returnData){
+            [brandNames addObject:[[Brand alloc] initWithGUID:item[@"brand_uuid"]
+                                                      andName:item[@"brand_name"]]];
+        }
+        
+        cache = brandNames;
+    }
+    return cache;
+}
+
++ (NSArray *)getDownvoteReasonsFromDictionary:(NSDictionary *)data
+{
+    static NSArray *cache = nil;
+    if(!cache){
+        NSArray *returnData = data ?: [self getJSONFromPath:@"/downvotereasons/"
+                                            usingHTTPMethod:HTTPMethodGet
+                                                sendingData:@{
+                                                              //nothing
+                                                              }
+                                       ];
+        
+        NSMutableArray *downvoteReasons = [NSMutableArray arrayWithCapacity:returnData.count];
+        for(NSDictionary *item in returnData){
+            [downvoteReasons addObject:[[DownvoteReason alloc] initWithGUID:item[@"downvotereason_uuid"]
+                                                                    andName:item[@"downvotereason_label"]]];
+        }
+        
+        cache = downvoteReasons;
+    }
+    return cache;
+}
+
 
 #pragma mark - IBAction Handlers
 #pragma mark Gesture Handlers

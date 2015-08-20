@@ -17,15 +17,19 @@
 - (void)swipedOutSwiperView:(SwiperView *)swiperView;
 - (void)editPropertiesForTag:(Tag *)tag;
 - (void)swiperView:(SwiperView *)swiperView updatedSwipedPercent:(CGFloat)percent;
+- (void)voteStatusChanged:(BOOL)anythingVoted;
 @end
 
 @interface SwiperView : UIView <TagDelegate>
 
+@property (nonatomic) BOOL reveal;
 @property (nonatomic, strong) Image *image;
 @property (nonatomic) BOOL gestureEnabled;
 @property (nonatomic) BOOL editing;
 @property (nonatomic) CGFloat blur;
 @property (nonatomic) CGPoint scaleFactor;
+@property (nonatomic, readonly) CGFloat imageHeight;
+@property (nonatomic, readonly) NSInteger numberOfTags;
 
 - (SwiperView *)initWithImage:(Image *)image
                    allowSwipe:(BOOL)allowSwipe

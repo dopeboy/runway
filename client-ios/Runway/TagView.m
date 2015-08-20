@@ -25,10 +25,13 @@
 #define LINE_WIDTH                          1
 #define MIN_LINE_LENGTH                     15
 
-#define DIALOG_WIDTH_FOR_KARMA              105
-#define KARMA_PADDING                       10
+#define DIALOG_WIDTH_FOR_KARMA              70
+#define KARMA_PADDING                       7
 #define KARMA_MINI_PAD                      2
 #define MINI_PAD                            4
+
+#define KARMA_UP_MAGIC_Y_PAD                1
+#define KARMA_DOWN_MAGIC_Y_PAD              2
 
 #define COLOR_SELECTED                      [UIColor whiteColor]
 #define COLOR_NOVOTE                        [UIColor whiteColor]
@@ -82,6 +85,18 @@ typedef enum {
     [self setNeedsDisplay];
 }
 
+- (t_Vote)voteState
+{
+    return self.tagObject.myVote;
+}
+
+- (void)setReveal:(BOOL)reveal
+{
+    _reveal = reveal;
+    
+    self.allowVoting = !reveal;
+}
+
 ////////////////////////////////////////////////////////////////////////
 //
 // Public Functions
@@ -118,6 +133,7 @@ typedef enum {
         [self.tagObject setAndSaveDownvoteWithReason:downvoteReason];
     }else{
         self.tagObject.myVote = VoteNone;                                   //set it here so that when we redraw it draws properly. Setting to "up" since that was the last thing we told the server.
+        [self.delegate changedVoteState];
     }
     
     [self setNeedsDisplay];
@@ -197,7 +213,7 @@ typedef enum {
 
     NSString *string;
     if(dialogType == TagViewDialogTypeDetails){
-        string = [NSString stringWithFormat:@"%@ | %@", [Clothing getNameForClothingWithGUID:self.tagObject.clothingGUID], [Brand getNameForBrandWithGUID:self.tagObject.brandGUID]];
+        string = [NSString stringWithFormat:@"%@", [Brand getNameForBrandWithGUID:self.tagObject.brandGUID]];
     }else if(dialogType == TagViewDialogTypeDownReasons){
         string = [DownvoteReason getNameForDownvoteReasonWithGUID:self.tagObject.downvoteReasons.allKeys.lastObject] ?: @" ";
     }else{
@@ -213,12 +229,16 @@ typedef enum {
         if(self.tagObject.myVote == VoteNone){
             dialogType = TagViewDialogTypeNone;
         }else if(self.tagObject.myVote == VoteUp){
-            dialogType = TagViewDialogTypeDetails;
+            if(self.reveal){
+                dialogType = TagViewDialogTypeDetails;
+            }else{
+                dialogType = TagViewDialogTypeNone;
+            }
         }else if(self.tagObject.myVote == VoteDown){
             dialogType = TagViewDialogTypeDownReasons;
         }
     }else{
-        if(self.editing){
+        if(self.editing || self.reveal){
             dialogType = TagViewDialogTypeDetails;
         }else{
             dialogType = TagViewDialogTypeKarma;
@@ -285,6 +305,7 @@ typedef enum {
             }
             
             [self setNeedsDisplay];
+            [self.delegate changedVoteState];
         }
     }
 }
@@ -372,7 +393,7 @@ typedef enum {
         //determine if we'll draw a circle, or a "dialog"
         CGSize requiredDialogSize = [self sizeRequiredForDialog];
         requiredDialogSize.width+= MINI_PAD + MINI_PAD;
-        BOOL drawCircle = (self.selected || (self.allowVoting && (self.tagObject.myVote == VoteNone)));        //only show circle if we're voting but haven't cast the vote.
+        BOOL drawCircle = (self.selected || (self.allowVoting && (self.tagObject.myVote != VoteDown)));        //only show circle if we're voting but haven't cast the vote.
         if(!drawCircle){
             if((self.tagObject.myVote == VoteDown) && ([self.tagObject.downvoteReasons.allKeys.lastObject length] == 0)){
                 drawCircle = YES;                                                           //if downvote but no reason (probably because it hasn't been selected), show circle
@@ -424,9 +445,9 @@ typedef enum {
                 
                 [upString drawAtPoint:CGPointMake(upX, dialogRect.origin.y + ((TEXT_HEIGHT - upSize.height) / 2)) withAttributes:attrs];
                 [dnString drawAtPoint:CGPointMake(dnX, dialogRect.origin.y + ((TEXT_HEIGHT - dnSize.height) / 2)) withAttributes:attrs];
-                
-                [upImg drawAtPoint:CGPointMake(upImgX, dialogRect.origin.y + ((TEXT_HEIGHT - upImg.size.height) / 2))];
-                [dnImg drawAtPoint:CGPointMake(dnImgX, dialogRect.origin.y + ((TEXT_HEIGHT - dnImg.size.height) / 2))];
+
+                [upImg drawAtPoint:CGPointMake(upImgX, KARMA_UP_MAGIC_Y_PAD   + dialogRect.origin.y + ((TEXT_HEIGHT - upImg.size.height) / 2))];
+                [dnImg drawAtPoint:CGPointMake(dnImgX, KARMA_DOWN_MAGIC_Y_PAD + dialogRect.origin.y + ((TEXT_HEIGHT - dnImg.size.height) / 2))];
             }else{
                 NSString *string = [self stringForDialog];
                 [string drawAtPoint:CGPointMake(dialogRect.origin.x + MINI_PAD,
