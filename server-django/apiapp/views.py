@@ -56,6 +56,7 @@ class PhotoViewSet(viewsets.ModelViewSet):
                               ExpiringTokenAuthentication)
     serializer_class = PhotoSerializer
     permission_classes = (IsAuthenticated, IsOwnerOrReadOnly)
+    queryset = Photo.objects.all()
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
