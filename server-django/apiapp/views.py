@@ -212,15 +212,15 @@ class ObtainExpiringAuthToken(ObtainAuthToken):
                 token.created = datetime.datetime.utcnow()
                 token.save()
 
-            ct_queryset = ClothingType.objects.all()
+            ct_queryset = ClothingType.objects.all().order_by('-label')
             ct_serializer = ClothingTypeSerializer(
                     ct_queryset, many=True, context={'request': self.request})
 
-            b_queryset = Brand.objects.all()
+            b_queryset = Brand.objects.order_by('-name')
             b_serializer = BrandTypeSerializer(
                     b_queryset, many=True, context={'request': self.request})
 
-            dvr_queryset = DownvoteReason.objects.all()
+            dvr_queryset = DownvoteReason.objects.all().order_by('-label')
             dvr_serializer = DownvoteReasonSerializer(
                     dvr_queryset, many=True, context={'request': self.request})
 

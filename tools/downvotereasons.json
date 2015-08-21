@@ -1,0 +1,58 @@
+[
+    {
+        "pk": "79d132b7-ab31-4314-9b49-c746aeb334fa",
+        "model": "apiapp.downvotereason",
+        "fields": {
+            "label": "Color mismatch",
+            "created": "2015-08-21"
+        }
+    },
+    {
+        "pk": "4684b496-5315-4539-b3e5-40cbafddd91f",
+        "model": "apiapp.downvotereason",
+        "fields": {
+            "label": "Out of season",
+            "created": "2015-08-21"
+        }
+    },
+    {
+        "pk": "a91fb471-61ba-4bac-9384-efc73cff150b",
+        "model": "apiapp.downvotereason",
+        "fields": {
+            "label": "Too much animal print",
+            "created": "2015-08-21"
+        }
+    },
+    {
+        "pk": "9d9ee092-39be-4fc2-a54d-cabea2f78863",
+        "model": "apiapp.downvotereason",
+        "fields": {
+            "label": "Too tight",
+            "created": "2015-08-21"
+        }
+    },
+    {
+        "pk": "1bcc6d2e-eaa0-44d7-b991-5c29da11442c",
+        "model": "apiapp.downvotereason",
+        "fields": {
+            "label": "Too short",
+            "created": "2015-08-21"
+        }
+    },
+    {
+        "pk": "4bf772e6-645c-4163-893a-0ac4ec04a9d6",
+        "model": "apiapp.downvotereason",
+        "fields": {
+            "label": "Too revealing",
+            "created": "2015-08-21"
+        }
+    },
+    {
+        "pk": "8d57b693-2739-4843-ac1f-4339ea03cd39",
+        "model": "apiapp.downvotereason",
+        "fields": {
+            "label": "Evening wear during day",
+            "created": "2015-08-21"
+        }
+    }
+]
