@@ -4,6 +4,7 @@
         "fields": {
             "first_name": "Test",
             "email": "runwaynycapp@gmail.com",
+			"password": "lol",
             "last_name": "User",
             "is_seed": 1,
             "gender": "F",
