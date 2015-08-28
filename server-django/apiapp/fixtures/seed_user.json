@@ -4,7 +4,7 @@
         "fields": {
             "first_name": "Test",
             "email": "runwaynycapp@gmail.com",
-			"password": "lol",
+			"password": "pbkdf2_sha256$20000$Ap2sggABZkP5$u42HTZ3vDg6KBfyQvbdkBlrS/bj7gg3QOpq5cmPA6as=",
             "last_name": "User",
             "is_seed": 1,
             "gender": "F",
