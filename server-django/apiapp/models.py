@@ -73,6 +73,9 @@ class MyUser(AbstractBaseUser):
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
 
+    # Is a seeded (fake) user
+    is_seed = models.BooleanField(default=False)
+
     objects = MyUserManager()
 
     GENDER_CHOICES = (
