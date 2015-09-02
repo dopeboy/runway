@@ -8,6 +8,7 @@
 
 #import "TagView.h"
 #import "Tag.h"
+#import "TagViewPopup.h"
 
 #import "Clothing.h"
 #import "Brand.h"
@@ -50,12 +51,16 @@ typedef enum {
 
 @interface TagView()
 @property (nonatomic, weak) id<TagDelegate> delegate;
+@property (nonatomic, weak) TagViewPopup *popup;
 @property (nonatomic, strong) Tag *tagObject;
 
 @property (nonatomic) BOOL allowEdit;
 @property (nonatomic) BOOL allowVoting;
 @property (nonatomic) CGPoint scaleFactor;
 @property (nonatomic) BOOL dragging;
+
+@property (nonatomic, weak) UITapGestureRecognizer *tapGesture;
+@property (nonatomic, weak) UILongPressGestureRecognizer *holdGesture;
 @end
 
 @implementation TagView
@@ -95,6 +100,7 @@ typedef enum {
     _reveal = reveal;
     
     self.allowVoting = !reveal;
+    self.tapGesture.enabled = !reveal;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -122,7 +128,14 @@ typedef enum {
         if(allowEdit){
             [self addGestureRecognizer:[[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)]];
         }
-        [self addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)]];
+        UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
+        [self addGestureRecognizer:tapGesture];
+        self.tapGesture = tapGesture;
+        
+        UILongPressGestureRecognizer *holdGesture = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleHold:)];
+        [self addGestureRecognizer:holdGesture];
+        self.holdGesture = holdGesture;
+        self.holdGesture.enabled = NO;
     }
     return self;
 }
@@ -286,26 +299,28 @@ typedef enum {
 #pragma mark Gesture Handlers
 - (void)handleTap:(UITapGestureRecognizer *)gesture
 {
-    if(self.allowEdit){
-        if(self.editing){
-            self.selected = YES;
-            [self showContextMenu];
-        }else{
-            [self.delegate displayDownvoteReasonStatsDialogForTag:self.tagObject withView:self];
-        }
-    }else if(self.allowVoting){
-        if(gesture.state == UIGestureRecognizerStateEnded){
-            if(self.tagObject.myVote == VoteNone){
-                [self.tagObject setAndSaveUpvote];
-            }else if(self.tagObject.myVote == VoteUp){
-                self.tagObject.myVote = VoteDown;       //set it here so that when we redraw it draws properly
-                [self.delegate displayDownvoteReasonDialogForTag:self.tagObject withView:self];
-            }else if(self.tagObject.myVote == VoteDown){
-                [self.tagObject clearAndSaveVote];
+    if(!self.reveal){
+        if(self.allowEdit){
+            if(self.editing){
+                self.selected = YES;
+                [self showContextMenu];
+            }else{
+                [self.delegate displayDownvoteReasonStatsDialogForTag:self.tagObject withView:self];
             }
-            
-            [self setNeedsDisplay];
-            [self.delegate changedVoteState];
+        }else if(self.allowVoting){
+            if(gesture.state == UIGestureRecognizerStateEnded){
+                if(self.tagObject.myVote == VoteNone){
+                    [self.tagObject setAndSaveUpvote];
+                }else if(self.tagObject.myVote == VoteUp){
+                    self.tagObject.myVote = VoteDown;       //set it here so that when we redraw it draws properly
+                    [self.delegate displayDownvoteReasonDialogForTag:self.tagObject withView:self];
+                }else if(self.tagObject.myVote == VoteDown){
+                    [self.tagObject clearAndSaveVote];
+                }
+                
+                [self setNeedsDisplay];
+                [self.delegate changedVoteState];
+            }
         }
     }
 }
@@ -346,6 +361,29 @@ typedef enum {
                 [self showContextMenu];
             }
         }
+    }
+}
+
+- (void)handleHold:(UILongPressGestureRecognizer *)gesture
+{
+    if(gesture.state == UIGestureRecognizerStateBegan){
+        CGPoint tagCenter = [self convertPoint:self.tagObject.adjustedPosition fromView:self.superview];
+        BOOL tagOnLeftSideOfScreen = (self.tagObject.adjustedPosition.x < (self.superview.frame.size.width / 2));
+        
+        CGFloat circleX = tagOnLeftSideOfScreen ? (PADDING + CIRCLE_RADIUS) : (self.frame.size.width - (PADDING + CIRCLE_RADIUS));
+        if(fabs(circleX - tagCenter.x) < CIRCLE_RADIUS) circleX = tagCenter.x;              //if the circle will be on top of the tag, put the circle on the correct position.
+        
+        CGPoint circleCenter = CGPointMake(circleX, tagCenter.y);
+        CGRect originForPopup = CGRectMake(circleCenter.x - CIRCLE_RADIUS, circleCenter.y, CIRCLE_RADIUS + CIRCLE_RADIUS, CIRCLE_RADIUS + CIRCLE_RADIUS);
+        
+        originForPopup = [self convertRect:originForPopup toView:self.superview];
+        originForPopup.origin.y = self.frame.origin.y;
+        
+        TagViewPopup *popup = [[TagViewPopup alloc] init];
+        [popup showInsideOfView:self.superview originatingFromRect:originForPopup withText:self.stringForDialog];
+        self.popup = popup;
+    }else if(gesture.state == UIGestureRecognizerStateEnded){
+        [self.popup hide];
     }
 }
 
@@ -418,6 +456,8 @@ typedef enum {
                                            CIRCLE_RADIUS + CIRCLE_RADIUS,
                                            CIRCLE_RADIUS + CIRCLE_RADIUS);
             CGContextFillEllipseInRect(context, circleRect);
+            
+            if(self.reveal) self.holdGesture.enabled = YES;
         }else{
             CGRect dialogRect = CGRectMake(tagOnLeftSideOfScreen ? PADDING : (rect.size.width - requiredDialogSize.width - PADDING),
                                            LINE_OFFSET - LINE_WIDTH,
