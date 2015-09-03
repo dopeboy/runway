@@ -58,6 +58,7 @@ typedef enum {
 @property (nonatomic) BOOL allowVoting;
 @property (nonatomic) CGPoint scaleFactor;
 @property (nonatomic) BOOL dragging;
+@property (nonatomic) BOOL pulsating;
 
 @property (nonatomic, weak) UITapGestureRecognizer *tapGesture;
 @property (nonatomic, weak) UILongPressGestureRecognizer *holdGesture;
@@ -101,6 +102,22 @@ typedef enum {
     
     self.allowVoting = !reveal;
     self.tapGesture.enabled = !reveal;
+}
+
+- (void)setPulsating:(BOOL)pulsating
+{
+    _pulsating = pulsating;
+    
+    if(pulsating){
+        [UIView animateWithDuration:1
+                              delay:0
+                            options:UIViewAnimationOptionAutoreverse | UIViewAnimationOptionRepeat
+                         animations:^{
+                             //manish
+                             self.alpha = 0.5;
+                         }
+                         completion:nil];
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -455,6 +472,7 @@ typedef enum {
             BOOL drewWhatItCould = NO;
             if(self.reveal){
                 self.holdGesture.enabled = YES;
+                self.pulsating = YES;
                 drewWhatItCould = [self showWhatYouCanInRect:rect onLeft:tagOnLeftSideOfScreen usingContext:context];
             }
             
