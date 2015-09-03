@@ -9,7 +9,7 @@
 #import "TagViewPopup.h"
 #import "CommonConstants.h"
 
-#define HEIGHT      100
+#define HEIGHT      50
 #define PADDING     20      //should be bigger than the radius
 #define RADIUS      12      //ideally, matches CIRCLE_RADIUS
 
@@ -62,7 +62,7 @@
                      }
                      completion:^(BOOL finished){
                          if(finished && CGRectEqualToRect(self.frame, destinationFrame)){
-                             [UIView animateWithDuration:ANIMATION_DURATION
+                             [UIView animateWithDuration:(ANIMATION_DURATION / 2)
                                                    delay:0
                                                  options:UIViewAnimationOptionBeginFromCurrentState
                                               animations:^{
@@ -76,7 +76,7 @@
 
 - (void)hide
 {
-    [UIView animateWithDuration:ANIMATION_DURATION
+    [UIView animateWithDuration:(ANIMATION_DURATION / 2)
                           delay:0
                         options:UIViewAnimationOptionBeginFromCurrentState
                      animations:^{
