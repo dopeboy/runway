@@ -111,7 +111,7 @@ typedef enum {
     if(pulsating){
         [UIView animateWithDuration:1
                               delay:0
-                            options:UIViewAnimationOptionAutoreverse | UIViewAnimationOptionRepeat
+                            options:UIViewAnimationOptionAutoreverse | UIViewAnimationOptionRepeat | UIViewAnimationOptionAllowUserInteraction
                          animations:^{
                              //manish
                              self.alpha = 0.5;
