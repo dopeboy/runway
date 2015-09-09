@@ -8,6 +8,7 @@
 
 #import "TagView.h"
 #import "Tag.h"
+#import "TagViewPopup.h"
 
 #import "Clothing.h"
 #import "Brand.h"
@@ -50,12 +51,17 @@ typedef enum {
 
 @interface TagView()
 @property (nonatomic, weak) id<TagDelegate> delegate;
+@property (nonatomic, weak) TagViewPopup *popup;
 @property (nonatomic, strong) Tag *tagObject;
 
 @property (nonatomic) BOOL allowEdit;
 @property (nonatomic) BOOL allowVoting;
 @property (nonatomic) CGPoint scaleFactor;
 @property (nonatomic) BOOL dragging;
+@property (nonatomic) BOOL pulsating;
+
+@property (nonatomic, weak) UITapGestureRecognizer *tapGesture;
+@property (nonatomic, weak) UILongPressGestureRecognizer *holdGesture;
 @end
 
 @implementation TagView
@@ -95,6 +101,23 @@ typedef enum {
     _reveal = reveal;
     
     self.allowVoting = !reveal;
+    self.tapGesture.enabled = !reveal;
+}
+
+- (void)setPulsating:(BOOL)pulsating
+{
+    _pulsating = pulsating;
+    
+    if(pulsating){
+        [UIView animateWithDuration:0.7
+                              delay:0
+                            options:UIViewAnimationOptionAutoreverse | UIViewAnimationOptionRepeat | UIViewAnimationOptionAllowUserInteraction
+                         animations:^{
+                             //manish
+                             self.alpha = 0.5;
+                         }
+                         completion:nil];
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -122,7 +145,15 @@ typedef enum {
         if(allowEdit){
             [self addGestureRecognizer:[[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)]];
         }
-        [self addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)]];
+        UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
+        [self addGestureRecognizer:tapGesture];
+        self.tapGesture = tapGesture;
+        
+        UILongPressGestureRecognizer *holdGesture = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleHold:)];
+        [self addGestureRecognizer:holdGesture];
+        self.holdGesture = holdGesture;
+        self.holdGesture.enabled = NO;
+        self.holdGesture.minimumPressDuration = 0.2;
     }
     return self;
 }
@@ -286,26 +317,28 @@ typedef enum {
 #pragma mark Gesture Handlers
 - (void)handleTap:(UITapGestureRecognizer *)gesture
 {
-    if(self.allowEdit){
-        if(self.editing){
-            self.selected = YES;
-            [self showContextMenu];
-        }else{
-            [self.delegate displayDownvoteReasonStatsDialogForTag:self.tagObject withView:self];
-        }
-    }else if(self.allowVoting){
-        if(gesture.state == UIGestureRecognizerStateEnded){
-            if(self.tagObject.myVote == VoteNone){
-                [self.tagObject setAndSaveUpvote];
-            }else if(self.tagObject.myVote == VoteUp){
-                self.tagObject.myVote = VoteDown;       //set it here so that when we redraw it draws properly
-                [self.delegate displayDownvoteReasonDialogForTag:self.tagObject withView:self];
-            }else if(self.tagObject.myVote == VoteDown){
-                [self.tagObject clearAndSaveVote];
+    if(!self.reveal){
+        if(self.allowEdit){
+            if(self.editing){
+                self.selected = YES;
+                [self showContextMenu];
+            }else{
+                [self.delegate displayDownvoteReasonStatsDialogForTag:self.tagObject withView:self];
             }
-            
-            [self setNeedsDisplay];
-            [self.delegate changedVoteState];
+        }else if(self.allowVoting){
+            if(gesture.state == UIGestureRecognizerStateEnded){
+                if(self.tagObject.myVote == VoteNone){
+                    [self.tagObject setAndSaveUpvote];
+                }else if(self.tagObject.myVote == VoteUp){
+                    self.tagObject.myVote = VoteDown;       //set it here so that when we redraw it draws properly
+                    [self.delegate displayDownvoteReasonDialogForTag:self.tagObject withView:self];
+                }else if(self.tagObject.myVote == VoteDown){
+                    [self.tagObject clearAndSaveVote];
+                }
+                
+                [self setNeedsDisplay];
+                [self.delegate changedVoteState];
+            }
         }
     }
 }
@@ -346,6 +379,29 @@ typedef enum {
                 [self showContextMenu];
             }
         }
+    }
+}
+
+- (void)handleHold:(UILongPressGestureRecognizer *)gesture
+{
+    if(gesture.state == UIGestureRecognizerStateBegan){
+        CGPoint tagCenter = [self convertPoint:self.tagObject.adjustedPosition fromView:self.superview];
+        BOOL tagOnLeftSideOfScreen = (self.tagObject.adjustedPosition.x < (self.superview.frame.size.width / 2));
+        
+        CGFloat circleX = tagOnLeftSideOfScreen ? (PADDING + CIRCLE_RADIUS) : (self.frame.size.width - (PADDING + CIRCLE_RADIUS));
+        if(fabs(circleX - tagCenter.x) < CIRCLE_RADIUS) circleX = tagCenter.x;              //if the circle will be on top of the tag, put the circle on the correct position.
+        
+        CGPoint circleCenter = CGPointMake(circleX, tagCenter.y);
+        CGRect originForPopup = CGRectMake(circleCenter.x - CIRCLE_RADIUS, circleCenter.y, CIRCLE_RADIUS + CIRCLE_RADIUS, CIRCLE_RADIUS + CIRCLE_RADIUS);
+        
+        originForPopup = [self convertRect:originForPopup toView:self.superview];
+        originForPopup.origin.y = self.frame.origin.y;
+        
+        TagViewPopup *popup = [[TagViewPopup alloc] init];
+        [popup showInsideOfView:self.superview originatingFromRect:originForPopup withText:self.stringForDialog];
+        self.popup = popup;
+    }else if(gesture.state == UIGestureRecognizerStateEnded){
+        [self.popup hide];
     }
 }
 
@@ -413,11 +469,20 @@ typedef enum {
 
         //draw circle or dialog
         if(drawCircle){
-            CGRect circleRect = CGRectMake(circleCenter.x - CIRCLE_RADIUS,
-                                           circleCenter.y - CIRCLE_RADIUS,
-                                           CIRCLE_RADIUS + CIRCLE_RADIUS,
-                                           CIRCLE_RADIUS + CIRCLE_RADIUS);
-            CGContextFillEllipseInRect(context, circleRect);
+            BOOL drewWhatItCould = NO;
+            if(self.reveal){
+                self.holdGesture.enabled = YES;
+                self.pulsating = YES;
+                drewWhatItCould = [self showWhatYouCanInRect:rect onLeft:tagOnLeftSideOfScreen usingContext:context];
+            }
+            
+            if(!drewWhatItCould){
+                CGRect circleRect = CGRectMake(circleCenter.x - CIRCLE_RADIUS,
+                                               circleCenter.y - CIRCLE_RADIUS,
+                                               CIRCLE_RADIUS + CIRCLE_RADIUS,
+                                               CIRCLE_RADIUS + CIRCLE_RADIUS);
+                CGContextFillEllipseInRect(context, circleRect);
+            }
         }else{
             CGRect dialogRect = CGRectMake(tagOnLeftSideOfScreen ? PADDING : (rect.size.width - requiredDialogSize.width - PADDING),
                                            LINE_OFFSET - LINE_WIDTH,
@@ -457,6 +522,43 @@ typedef enum {
         }
     }
 }
+
+- (BOOL)showWhatYouCanInRect:(CGRect)rect
+                      onLeft:(BOOL)onLeft
+                usingContext:(CGContextRef)context
+{
+    BOOL success = NO;
+    
+    CGFloat availableDialogWidth = rect.size.width - (PADDING + MIN_LINE_LENGTH);
+
+    NSString *string = [self stringForDialog];                                                              //get string
+    if(string.length) string = [NSString stringWithFormat:@"%@...", [string substringToIndex:string.length - 1]];             //remove last char and add ...
+    CGSize requiredSize = [string sizeWithAttributes:@{NSFontAttributeName:self.fontForDialog}];
+    CGFloat requiredWidth = requiredSize.width + MINI_PAD + MINI_PAD;
+    CGFloat requiredHeight = requiredSize.height;
+    
+    while((string.length > 3) && (requiredWidth > availableDialogWidth)){                                   //until we chop off all the string or we can actually fit it
+        string = [NSString stringWithFormat:@"%@...", [string substringToIndex:string.length - 4]];         //remove last 4 chars (... + last char) and re-add ...
+        requiredWidth = [string sizeWithAttributes:@{NSFontAttributeName:self.fontForDialog}].width + MINI_PAD + MINI_PAD;
+    }
+    
+    if(requiredWidth <= availableDialogWidth){  //if we don't even have space to draw the "...", then do nothing. Otherwise, draw the text
+        CGRect dialogRect = CGRectMake(onLeft ? PADDING : (rect.size.width - requiredWidth - PADDING),
+                                       LINE_OFFSET - LINE_WIDTH,
+                                       requiredWidth,
+                                       TEXT_HEIGHT);
+        CGContextFillRect(context, dialogRect);
+
+        [string drawAtPoint:CGPointMake(dialogRect.origin.x + MINI_PAD,
+                                        dialogRect.origin.y + ((TEXT_HEIGHT - requiredHeight) / 2))
+             withAttributes:@{NSFontAttributeName:[self fontForDialog]}];
+        
+        success = YES;
+    }
+    
+    return success;
+}
+
 
 - (BOOL)canBecomeFirstResponder
 {

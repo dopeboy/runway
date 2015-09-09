@@ -41,6 +41,7 @@
 		625CD9821B85201100BCFF43 /* helpViewPostTag.png in Resources */ = {isa = PBXBuildFile; fileRef = 625CD97C1B85201100BCFF43 /* helpViewPostTag.png */; };
 		625CD9831B85201100BCFF43 /* helpViewPostTag@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 625CD97D1B85201100BCFF43 /* helpViewPostTag@2x.png */; };
 		625CD9841B85201100BCFF43 /* helpViewPostTag@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 625CD97E1B85201100BCFF43 /* helpViewPostTag@3x.png */; };
+		625DBC971B9681200083103C /* TagViewPopup.m in Sources */ = {isa = PBXBuildFile; fileRef = 625DBC961B9681200083103C /* TagViewPopup.m */; };
 		6260FC651B1373C2002D8D1F /* ImageListCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 6260FC641B1373C2002D8D1F /* ImageListCell.m */; };
 		6260FC671B137B54002D8D1F /* clear@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 6260FC661B137B54002D8D1F /* clear@2x.png */; };
 		6260FC6A1B13B9AF002D8D1F /* SwiperView.m in Sources */ = {isa = PBXBuildFile; fileRef = 6260FC691B13B9AF002D8D1F /* SwiperView.m */; };
@@ -183,6 +184,8 @@
 		625CD97C1B85201100BCFF43 /* helpViewPostTag.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = helpViewPostTag.png; sourceTree = "<group>"; };
 		625CD97D1B85201100BCFF43 /* helpViewPostTag@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "helpViewPostTag@2x.png"; sourceTree = "<group>"; };
 		625CD97E1B85201100BCFF43 /* helpViewPostTag@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "helpViewPostTag@3x.png"; sourceTree = "<group>"; };
+		625DBC951B9681200083103C /* TagViewPopup.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TagViewPopup.h; sourceTree = "<group>"; };
+		625DBC961B9681200083103C /* TagViewPopup.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TagViewPopup.m; sourceTree = "<group>"; };
 		6260FC631B1373C2002D8D1F /* ImageListCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImageListCell.h; sourceTree = "<group>"; };
 		6260FC641B1373C2002D8D1F /* ImageListCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ImageListCell.m; sourceTree = "<group>"; };
 		6260FC661B137B54002D8D1F /* clear@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "clear@2x.png"; sourceTree = "<group>"; };
@@ -499,6 +502,8 @@
 				6260FC691B13B9AF002D8D1F /* SwiperView.m */,
 				62A7081D1B150B260094DCD3 /* TagView.h */,
 				62A7081E1B150B260094DCD3 /* TagView.m */,
+				625DBC951B9681200083103C /* TagViewPopup.h */,
+				625DBC961B9681200083103C /* TagViewPopup.m */,
 				628B39CE1B179F7100232F16 /* DownvoteReasonsView.h */,
 				628B39CF1B179F7100232F16 /* DownvoteReasonsView.m */,
 				62CD5CCE1B1CF2BE00265D6C /* EditTagDetailsViewController.h */,
@@ -803,6 +808,7 @@
 				6225D8301B0FD69800C40AD3 /* SwiperViewController.m in Sources */,
 				62F940B51B4DC8A800771E08 /* AmazonServices.m in Sources */,
 				6225D7D01B0F7C6200C40AD3 /* DownvoteReason.m in Sources */,
+				625DBC971B9681200083103C /* TagViewPopup.m in Sources */,
 				6260FC6A1B13B9AF002D8D1F /* SwiperView.m in Sources */,
 				62F985BB1B065B09006A9375 /* main.m in Sources */,
 				62199ABC1B0E86CB00B31375 /* Tag.m in Sources */,
