@@ -3,6 +3,7 @@
         "pk": "fdbf0a43-de2e-4c31-9174-10f6934f61f2",
         "fields": {
             "url": "https://s3.amazonaws.com/runway-s3-dev/100.png",
+            "thumb_url": "https://s3.amazonaws.com/runway-s3-dev/100_thumb.png",
             "owner": "fdbf0a43-de2e-4c31-9174-10f6934f61f2",
 			"created" : "2015-08-28"
         },
