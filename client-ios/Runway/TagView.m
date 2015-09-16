@@ -98,10 +98,12 @@ typedef enum {
 
 - (void)setReveal:(BOOL)reveal
 {
-    _reveal = reveal;
-    
-    self.allowVoting = !reveal;
-    self.tapGesture.enabled = !reveal;
+    if(self.voteState == VoteUp){
+        _reveal = reveal;
+        
+        self.allowVoting = !reveal;
+        self.tapGesture.enabled = !reveal;
+    }
 }
 
 - (void)setPulsating:(BOOL)pulsating

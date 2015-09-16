@@ -53,4 +53,6 @@
 + (BOOL)saveNewImage:(Image *)image;
 + (BOOL)deleteImageWithGUID:(NSString *)imageGUID;
 
++ (NSInteger)readKarma;
+
 @end

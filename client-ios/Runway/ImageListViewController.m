@@ -289,7 +289,7 @@
 #pragma mark Notification Handlers
 - (void)karmaUpdated:(NSNotification *)notification
 {
-    NSInteger karma = [notification.userInfo[notification.name] integerValue];
+    NSInteger karma = notification ? [notification.userInfo[notification.name] integerValue] : [RunwayServices readKarma];
     [self.karmaButton setTitle:[NSString stringWithFormat:@"%zd pts", karma] forState:UIControlStateNormal];
 }
 

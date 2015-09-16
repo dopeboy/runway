@@ -320,6 +320,28 @@ typedef enum{
     return (returnData != nil);
 }
 
++ (NSInteger)readKarma
+{
+    return [self setKarma:NO to:0];
+}
+
++ (void)writeKarma:(NSInteger)karma
+{
+    [self setKarma:YES to:karma];
+}
+
++ (NSInteger)setKarma:(BOOL)set
+                   to:(NSInteger)karma
+{
+    static NSInteger cache = 0;
+    
+    if(set){
+        cache = karma;
+    }
+    
+    return cache;
+}
+
 ////////////////////////////////////////////////////////////////////////
 //
 // Helper Functions
@@ -401,9 +423,12 @@ typedef enum{
     }
 
     if([jsonReceivedData isKindOfClass:[NSDictionary class]] && jsonReceivedData[@"user_karma"]){
-        [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_KARMA_UPDATED
-                                                            object:self
-                                                          userInfo:@{NOTIFICATION_KARMA_UPDATED : jsonReceivedData[@"user_karma"]}];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self writeKarma:[jsonReceivedData[@"user_karma"] integerValue]];
+            [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_KARMA_UPDATED
+                                                                object:self
+                                                              userInfo:@{NOTIFICATION_KARMA_UPDATED : jsonReceivedData[@"user_karma"]}];
+        });
     }
     
     return jsonReceivedData;
