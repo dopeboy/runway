@@ -111,7 +111,7 @@ typedef enum {
     _pulsating = pulsating;
     
     if(pulsating){
-        [UIView animateWithDuration:1
+        [UIView animateWithDuration:0.7
                               delay:0
                             options:UIViewAnimationOptionAutoreverse | UIViewAnimationOptionRepeat | UIViewAnimationOptionAllowUserInteraction
                          animations:^{
@@ -155,7 +155,7 @@ typedef enum {
         [self addGestureRecognizer:holdGesture];
         self.holdGesture = holdGesture;
         self.holdGesture.enabled = NO;
-        self.holdGesture.minimumPressDuration = 0.3;
+        self.holdGesture.minimumPressDuration = 0.2;
     }
     return self;
 }
