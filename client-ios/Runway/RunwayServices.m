@@ -239,7 +239,7 @@ typedef enum{
                                                        }
                                 ];
     
-    return returnData[@"img_uuid"];
+    return returnData[@"tag_uuid"];
 }
 
 + (BOOL)editTagWithGUID:(NSString *)tagGUID
